@@ -10,11 +10,10 @@
 #define RIGHT 1
 #define LEFT 2
 
-
 class Robot {
 public:
-    Robot(): speed(50), obstacle(false) {};
-    Robot(uint8_t _speed): speed(_speed), obstacle(false) {};
+    Robot(): speed(50), sonar(A1, A2, 200), obstacle(false) {};
+    Robot(uint8_t _speed): speed(_speed), sonar(A1, A2, 200), obstacle(false) {};
     void setSpeed(uint8_t);
     void brake(bool stop);
     void goForward();
@@ -55,7 +54,7 @@ private:
 
     uint8_t trigPin = A1; /* It can be changed */
     uint8_t echoPin = A2; /* It can be changed */
-    //NewPing sonar; /* NewPing object to controll the ultrasonic sensor, sets with trig and echo pins and maximum distance*/
+    NewPing sonar; /* NewPing object to controll the ultrasonic sensor, sets with trig and echo pins and maximum distance*/
 
     static const uint8_t dangerDistance = 20;
     static const uint8_t safeDistance = 20;

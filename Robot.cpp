@@ -1,7 +1,7 @@
 #include "Robot.h"
 
 /******************* SETUP *******************/
-NewPing sonar(A1, A2, 200);
+
 
 /******************* MOVEMENT *******************/
 uint8_t Robot::controlSpeed(uint8_t speed) {
