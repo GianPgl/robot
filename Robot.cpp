@@ -16,7 +16,7 @@ void Robot::setSpeed(uint8_t speed) {
   analogWrite(pwmLPin, speed);
 }
 
-void Robot::brake(bool stop) { /*  */
+void Robot::brake(bool stop) { //true to stop, false to let the robot move
   if (stop == true) {
     digitalWrite(brakeRPin, HIGH);
     digitalWrite(brakeLPin, HIGH);
@@ -27,26 +27,35 @@ void Robot::brake(bool stop) { /*  */
 }
 
 void Robot::goForward() {
-  brake(false);
+  /*brake(false);
   digitalWrite(directionRPin, HIGH);
-  digitalWrite(directionLPin, HIGH);
+  digitalWrite(directionLPin, HIGH);*/
+  Serial.begin(9600);
+  Serial.println("I'm going forward!");
+  Serial.end();
 }
 
 void Robot::goBackward() {
+  brake(false);
   digitalWrite(directionRPin, LOW);
   digitalWrite(directionLPin, LOW);
 }
 
 void Robot::turnRight() {
+  brake(false);
   digitalWrite(directionRPin, HIGH);
   digitalWrite(brakeLPin, LOW);
-  delay(50); /* Tempo provvisorio */
+  //delay(DELAY); /* Tempo provvisorio */
+  Serial.begin(9600);
+  Serial.println("I'm going right!");
+  Serial.end();
 }
 
 void Robot::turnLeft() {
+  brake(false);
   digitalWrite(directionLPin, HIGH);
   digitalWrite(brakeRPin, LOW);
-  delay(50); /* Tempo provvisorio */
+  //delay(DELAY); /* Tempo provvisorio */
 }
 
 void Robot::rotateOn(uint8_t direction, uint16_t ms) {
@@ -61,15 +70,15 @@ void Robot::rotateOn(uint8_t direction, uint16_t ms) {
 }
 
 void Robot::rightAngleRotation(uint8_t direction) {
-  rotateOn(direction, 50); /* Tempo provvisorio */
+  rotateOn(direction, DELAY); /* Tempo provvisorio */
 }
 
 void Robot::halfRotation() {
-  rotateOn(RIGHT, 100); /* Tempo provvisorio (2* tempo right) */
+  rotateOn(RIGHT, 2*DELAY); /* Tempo provvisorio (2* tempo right) */
 }
 
 void Robot::fullRotation() {
-  rotateOn(RIGHT, 200); /* Tempo provvisorio (2 * tempo half)*/
+  rotateOn(RIGHT, 4*DELAY); /* Tempo provvisorio (2 * tempo half)*/
 }
 
 /******************* SERVO *******************/
@@ -136,4 +145,19 @@ void Robot::setPath() {
 
 void Robot::changePath() {
 
+}
+
+void Robot::followLine(){
+  if(!digitalRead(midLineFollower)){  //if a black line is detected input is LOW
+    goForward();
+  }
+  if(!digitalRead(rightLineFollower)){  //if a black line is detected input is LOW
+    turnRight();
+  }
+  if(!digitalRead(leftLineFollower)){  //if a black line is detected input is LOW
+    turnLeft();
+  }
+  if(digitalRead(midLineFollower) && digitalRead(rightLineFollower) /*&& digitalRead(leftLineFollower)*/){
+    //espressione triste
+  }
 }

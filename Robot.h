@@ -9,11 +9,20 @@
 #define FRONT 0
 #define RIGHT 1
 #define LEFT 2
+#define DELAY 50
 
 class Robot {
 public:
-    Robot(): speed(50), sonar(A1, A2, 200), obstacle(false) {};
-    Robot(uint8_t _speed): speed(_speed), sonar(A1, A2, 200), obstacle(false) {};
+    Robot(): speed(50), sonar(A1, A2, 200), obstacle(false) {
+      pinMode(midLineFollower,INPUT);
+      pinMode(rightLineFollower,INPUT);
+      pinMode(leftLineFollower,INPUT);
+    };
+    Robot(uint8_t _speed): speed(_speed), sonar(A1, A2, 200), obstacle(false) {
+      pinMode(midLineFollower,INPUT);
+      pinMode(rightLineFollower,INPUT);
+      pinMode(leftLineFollower,INPUT);
+    };
     void setSpeed(uint8_t);
     void brake(bool stop);
     void goForward();
@@ -34,6 +43,8 @@ public:
     void setPath();
     void changePath();
 
+    void followLine();
+
 private:
     int speed;
     static const uint8_t maxSpeed = 255;
@@ -49,6 +60,10 @@ private:
     static const uint8_t directionLPin = 13; /* Pin to controll the direction of left motor, linked to Ch.B */
     static const uint8_t pwmLPin = 11; /* Pin to controll pwm of the left motor */
     static const uint8_t brakeLPin = 8; /* Pin to brake left motor */
+
+    static const uint8_t midLineFollower = 5;
+    static const uint8_t rightLineFollower = 6;
+    static const uint8_t leftLineFollower = 7;
 
     Servo servo; /* Servo object to controll the servo motor */
 
