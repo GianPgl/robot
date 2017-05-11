@@ -9,6 +9,7 @@
 #define FRONT 0
 #define RIGHT 1
 #define LEFT 2
+#define DELAY 50
 
 #define NEWPING_TRIG 1
 #define NEWPING_ECHO 2
