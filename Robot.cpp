@@ -1,7 +1,27 @@
 #include "Robot.h"
 
-/******************* SETUP *******************/
+/******************* CONSTRUCTOR *******************/
+Robot::Robot () {
+  setSpeed(50);
+  servo.attach(13);
+  pinMode(directionRPin, OUTPUT);
+  pinMode(pwmRPin, OUTPUT);
+  pinMode(brakeRPin, OUTPUT);
+  pinMode(directionLPin, OUTPUT);
+  pinMode(pwmLPin, OUTPUT);
+  pinMode(brakeLPin, OUTPUT);
+}
 
+Robot::Robot(uint8_t _speed) {
+  setSpeed(_speed);
+  servo.attach(13);
+  pinMode(directionRPin, OUTPUT);
+  pinMode(pwmRPin, OUTPUT);
+  pinMode(brakeRPin, OUTPUT);
+  pinMode(directionLPin, OUTPUT);
+  pinMode(pwmLPin, OUTPUT);
+  pinMode(brakeLPin, OUTPUT);
+}
 
 /******************* MOVEMENT *******************/
 uint8_t Robot::controlSpeed(uint8_t speed) {
@@ -79,20 +99,16 @@ void Robot::servoRotation(uint8_t degrees) { /* set servo position */
 }
 
 /******************* ULTRASONIC *******************/
-uint8_t Robot::readDistance() { /* return the distance (in cm) read by the ultrasonic sensor */
-  uint8_t echoTime = sonar.ping();
-  uint8_t distance = echoTime/US_ROUNDTRIP_CM;
-  return distance;
+uint8_t Robot::readDistanceCM() { /* return the distance (in centimeters) read by the ultrasonic sensor */
+  return sonar.ping_cm();
 }
 
-uint8_t Robot::readDistanceIN() {
-  uint8_t echoTime = sonar.ping();
-  uint8_t distance = echoTime/US_ROUNDTRIP_IN;
-  return distance;
+uint8_t Robot::readDistanceIN() { /* return the distance (in inches) read by the ultrasonic sensor */
+  return sonar.ping_in();
 }
 
 bool Robot::isClear() { /* return if the path is clear or not */
-    if(readDistance() <= safeDistance)
+    if(readDistanceCM() <= safeDistance)
         return false;
     return true;
 }
@@ -110,9 +126,9 @@ uint8_t Robot::findPath() {
   do {
     servoRotation(position);
     switch (position) {
-      case 45: leftDistance = readDistance(); break;
-      case 90: frontDistance = readDistance(); break;
-      case 135: rightDistance = readDistance(); break;
+      case 45: leftDistance = readDistanceCM(); break;
+      case 90: frontDistance = readDistanceCM(); break;
+      case 135: rightDistance = readDistanceCM(); break;
     }
     position += 45;
   } while (position <= 135);

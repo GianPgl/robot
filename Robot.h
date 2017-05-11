@@ -10,10 +10,14 @@
 #define RIGHT 1
 #define LEFT 2
 
+#define NEWPING_TRIG 1
+#define NEWPING_ECHO 2
+#define NEWPING_MAXDISTANCE 200
+
 class Robot {
 public:
-    Robot(): speed(50), sonar(A1, A2, 200), obstacle(false) {};
-    Robot(uint8_t _speed): speed(_speed), sonar(A1, A2, 200), obstacle(false) {};
+    Robot();
+    Robot(uint8_t _speed);
     void setSpeed(uint8_t);
     void brake(bool stop);
     void goForward();
@@ -26,7 +30,7 @@ public:
 
     void servoRotation(uint8_t);
 
-    uint8_t readDistance();
+    uint8_t readDistanceCM();
     uint8_t readDistanceIN();
     bool isClear();
 
@@ -52,13 +56,10 @@ private:
 
     Servo servo; /* Servo object to controll the servo motor */
 
-    uint8_t trigPin = A1; /* It can be changed */
-    uint8_t echoPin = A2; /* It can be changed */
     NewPing sonar; /* NewPing object to controll the ultrasonic sensor, sets with trig and echo pins and maximum distance*/
 
     static const uint8_t dangerDistance = 20;
     static const uint8_t safeDistance = 20;
-    bool obstacle;
 };
 
 
