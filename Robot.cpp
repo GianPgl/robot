@@ -1,27 +1,7 @@
 #include "Robot.h"
 
-/******************* CONSTRUCTOR *******************/
-Robot::Robot () {
-  setSpeed(50);
-  servo.attach(13);
-  pinMode(directionRPin, OUTPUT);
-  pinMode(pwmRPin, OUTPUT);
-  pinMode(brakeRPin, OUTPUT);
-  pinMode(directionLPin, OUTPUT);
-  pinMode(pwmLPin, OUTPUT);
-  pinMode(brakeLPin, OUTPUT);
-}
+/******************* SETUP *******************/
 
-Robot::Robot(uint8_t _speed) {
-  setSpeed(_speed);
-  servo.attach(13);
-  pinMode(directionRPin, OUTPUT);
-  pinMode(pwmRPin, OUTPUT);
-  pinMode(brakeRPin, OUTPUT);
-  pinMode(directionLPin, OUTPUT);
-  pinMode(pwmLPin, OUTPUT);
-  pinMode(brakeLPin, OUTPUT);
-}
 
 /******************* MOVEMENT *******************/
 uint8_t Robot::controlSpeed(uint8_t speed) {
@@ -36,7 +16,7 @@ void Robot::setSpeed(uint8_t speed) {
   analogWrite(pwmLPin, speed);
 }
 
-void Robot::brake(bool stop) { /*  */
+void Robot::brake(bool stop) { //true to stop, false to let the robot move
   if (stop == true) {
     digitalWrite(brakeRPin, HIGH);
     digitalWrite(brakeLPin, HIGH);
@@ -47,26 +27,35 @@ void Robot::brake(bool stop) { /*  */
 }
 
 void Robot::goForward() {
-  brake(false);
+  /*brake(false);
   digitalWrite(directionRPin, HIGH);
-  digitalWrite(directionLPin, HIGH);
+  digitalWrite(directionLPin, HIGH);*/
+  Serial.begin(9600);
+  Serial.println("I'm going forward!");
+  Serial.end();
 }
 
 void Robot::goBackward() {
+  brake(false);
   digitalWrite(directionRPin, LOW);
   digitalWrite(directionLPin, LOW);
 }
 
 void Robot::turnRight() {
+  brake(false);
   digitalWrite(directionRPin, HIGH);
   digitalWrite(brakeLPin, LOW);
-  delay(DELAY); /* Tempo provvisorio */
+  //delay(DELAY); /* Tempo provvisorio */
+  Serial.begin(9600);
+  Serial.println("I'm going right!");
+  Serial.end();
 }
 
 void Robot::turnLeft() {
+  brake(false);
   digitalWrite(directionLPin, HIGH);
   digitalWrite(brakeRPin, LOW);
-  delay(DELAY); /* Tempo provvisorio */
+  //delay(DELAY); /* Tempo provvisorio */
 }
 
 void Robot::rotateOn(uint8_t direction, uint16_t ms) {
@@ -93,18 +82,27 @@ void Robot::fullRotation() {
 }
 
 /******************* SERVO *******************/
+
+void Robot::setServo(){
+  servo.attach(servoPin);
+}
+
 void Robot::servoRotation(uint8_t degrees) { /* set servo position */
+  //servo.attach(servoPin);
   servo.write(degrees);
+  //servo.detach();
   delay(100); /* wait 100 milliseconds to permit to the servo to reach the position */
 }
 
 /******************* ULTRASONIC *******************/
-uint8_t Robot::readDistanceCM() { /* return the distance (in centimeters) read by the ultrasonic sensor */
-  return sonar.ping_cm();
+uint8_t Robot::readDistanceCM() { /* return the distance (in cm) read by the ultrasonic sensor */
+  uint8_t distance = sonar.ping_cm();
+  return distance;
 }
 
-uint8_t Robot::readDistanceIN() { /* return the distance (in inches) read by the ultrasonic sensor */
-  return sonar.ping_in();
+uint8_t Robot::readDistanceIN() {
+  uint8_t distance = sonar.ping_in();
+  return distance;
 }
 
 bool Robot::isClear() { /* return if the path is clear or not */
@@ -131,25 +129,58 @@ uint8_t Robot::findPath() {
       case 135: rightDistance = readDistanceCM(); break;
     }
     position += 45;
+    delay(200);
   } while (position <= 135);
 
   /* Ritorno la strada migliore */
   if (rightDistance > frontDistance) {
     if (rightDistance > leftDistance)
-      return RIGHT;
+      return rightDistance < safeDistance ? NO_WAY : RIGHT;
     else
-      return LEFT;
+      return leftDistance < safeDistance ? NO_WAY : LEFT;
   } else {
     if(leftDistance > frontDistance)
-      return LEFT;
+      return leftDistance < safeDistance ? NO_WAY : LEFT;
   }
-  return FRONT;
+  return frontDistance < safeDistance ? NO_WAY : FRONT;
 }
 
 void Robot::setPath() {
-
+  uint8_t direction = findPath();
+  if(direction == NO_WAY){
+    halfRotation();
+    findPath();
+  }
+  else{
+    switch(direction){
+      case FRONT:
+        goForward();
+      break;
+      case RIGHT:
+        turnRight();
+      break;
+      case LEFT:
+        turnLeft();
+      break;
+    }
+  }
 }
 
-void Robot::changePath() {
+/*void Robot::changePath() {
 
+}*/
+
+void Robot::followLine(){
+  if(!digitalRead(midLineFollower)){  //if a black line is detected input is LOW
+    goForward();
+  }
+  if(!digitalRead(rightLineFollower)){  //if a black line is detected input is LOW
+    turnRight();
+  }
+  if(!digitalRead(leftLineFollower)){  //if a black line is detected input is LOW
+    turnLeft();
+  }
+  if(digitalRead(midLineFollower) && digitalRead(rightLineFollower) /*&& digitalRead(leftLineFollower)*/){
+    //espressione triste
+  }
 }

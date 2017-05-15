@@ -9,16 +9,23 @@
 #define FRONT 0
 #define RIGHT 1
 #define LEFT 2
+#define NO_WAY 3
 #define DELAY 50
-
-#define NEWPING_TRIG 1
-#define NEWPING_ECHO 2
-#define NEWPING_MAXDISTANCE 200
 
 class Robot {
 public:
-    Robot();
-    Robot(uint8_t _speed);
+    Robot(): speed(50), sonar(trigPin, echoPin, 200), obstacle(false) {
+      pinMode(midLineFollower,INPUT);
+      pinMode(rightLineFollower,INPUT);
+      pinMode(leftLineFollower,INPUT);
+      //servo.attach(servoPin);
+    };
+    Robot(uint8_t _speed): speed(_speed), sonar(trigPin, echoPin, 200), obstacle(false) {
+      pinMode(midLineFollower,INPUT);
+      pinMode(rightLineFollower,INPUT);
+      pinMode(leftLineFollower,INPUT);
+      //servo.attach(servoPin);
+    };
     void setSpeed(uint8_t);
     void brake(bool stop);
     void goForward();
@@ -37,7 +44,11 @@ public:
 
     uint8_t findPath();
     void setPath();
-    void changePath();
+    //void changePath();
+
+    void followLine();
+
+    void setServo();
 
 private:
     int speed;
@@ -47,20 +58,29 @@ private:
     void rotateOn(uint8_t, uint16_t);
 
     /*  Motor settings */
-    static const uint8_t directionRPin = 12; /* Pin to controll the direction of right motor, linked to Ch.A */
-    static const uint8_t pwmRPin = 3; /* Pin to controll pwm of the right motor */
+    static const uint8_t directionRPin = 12; /* Pin to control the direction of right motor, linked to Ch.A */
+    static const uint8_t pwmRPin = 3; /* Pin to control pwm of the right motor */
     static const uint8_t brakeRPin = 9; /* Pin to brake right motor */
 
-    static const uint8_t directionLPin = 13; /* Pin to controll the direction of left motor, linked to Ch.B */
-    static const uint8_t pwmLPin = 11; /* Pin to controll pwm of the left motor */
+    static const uint8_t directionLPin = 13; /* Pin to control the direction of left motor, linked to Ch.B */
+    static const uint8_t pwmLPin = 11; /* Pin to control pwm of the left motor */
     static const uint8_t brakeLPin = 8; /* Pin to brake left motor */
 
-    Servo servo; /* Servo object to controll the servo motor */
+    static const uint8_t midLineFollower = 5;
+    static const uint8_t rightLineFollower = 6;
+    static const uint8_t leftLineFollower = 7;
 
-    NewPing sonar; /* NewPing object to controll the ultrasonic sensor, sets with trig and echo pins and maximum distance*/
+    static const uint8_t servoPin = 10;
+
+    Servo servo; /* Servo object to control the servo motor */
+
+    uint8_t trigPin = A1; /* It can be changed */
+    uint8_t echoPin = A2; /* It can be changed */
+    NewPing sonar; /* NewPing object to control the ultrasonic sensor, sets with trig and echo pins and maximum distance*/
 
     static const uint8_t dangerDistance = 20;
     static const uint8_t safeDistance = 20;
+    bool obstacle;
 };
 
 

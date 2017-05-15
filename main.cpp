@@ -3,10 +3,14 @@
 
 Robot robot;
 
-void setup(){
+/*void setServo(uint8_t pin){
+  robot.servo.attach(pin);
+}*/
 
+void setup(){
+  robot.setServo();
 }
 
 void loop(){
-      robot.goForward();
+      robot.setPath();
 }
