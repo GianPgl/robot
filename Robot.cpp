@@ -2,6 +2,15 @@
 
 /******************* SETUP *******************/
 
+void Robot::init(){
+    //init motori
+    pinMode(midLineFollower,INPUT);
+    pinMode(rightLineFollower,INPUT);
+    pinMode(leftLineFollower,INPUT);
+    servo.attach(servoPin);
+    servo.write(90);
+    sonar.init(trigPin, echoPin);
+}
 
 /******************* MOVEMENT *******************/
 uint8_t Robot::controlSpeed(uint8_t speed) {
@@ -32,6 +41,7 @@ void Robot::goForward() {
   digitalWrite(directionLPin, HIGH);*/
   Serial.begin(9600);
   Serial.println("I'm going forward!");
+  Serial.println(servo.read());
   Serial.end();
 }
 
@@ -48,6 +58,7 @@ void Robot::turnRight() {
   //delay(DELAY); /* Tempo provvisorio */
   Serial.begin(9600);
   Serial.println("I'm going right!");
+  Serial.println(servo.read());
   Serial.end();
 }
 
@@ -55,6 +66,10 @@ void Robot::turnLeft() {
   brake(false);
   digitalWrite(directionLPin, HIGH);
   digitalWrite(brakeRPin, LOW);
+  Serial.begin(9600);
+  Serial.println("I'm going left!");
+  Serial.println(servo.read());
+  Serial.end();
   //delay(DELAY); /* Tempo provvisorio */
 }
 
@@ -83,14 +98,13 @@ void Robot::fullRotation() {
 
 /******************* SERVO *******************/
 
-void Robot::setServo(){
+/*void Robot::setServo(){
   servo.attach(servoPin);
-}
+  servo.write(90);
+}*/
 
 void Robot::servoRotation(uint8_t degrees) { /* set servo position */
-  //servo.attach(servoPin);
   servo.write(degrees);
-  //servo.detach();
   delay(100); /* wait 100 milliseconds to permit to the servo to reach the position */
 }
 
@@ -129,7 +143,7 @@ uint8_t Robot::findPath() {
       case 135: rightDistance = readDistanceCM(); break;
     }
     position += 45;
-    delay(200);
+    delay(400);
   } while (position <= 135);
 
   /* Ritorno la strada migliore */

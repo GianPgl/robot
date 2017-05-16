@@ -8,9 +8,10 @@ Robot robot;
 }*/
 
 void setup(){
-  robot.setServo();
+  robot.init();
 }
 
 void loop(){
       robot.setPath();
+      delay(1500);
 }

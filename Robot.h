@@ -14,18 +14,17 @@
 
 class Robot {
 public:
-    Robot(): speed(50), sonar(trigPin, echoPin, 200), obstacle(false) {
+    /*Robot(): speed(50), sonar(trigPin, echoPin, 200), obstacle(false) {
       pinMode(midLineFollower,INPUT);
       pinMode(rightLineFollower,INPUT);
       pinMode(leftLineFollower,INPUT);
-      //servo.attach(servoPin);
-    };
-    Robot(uint8_t _speed): speed(_speed), sonar(trigPin, echoPin, 200), obstacle(false) {
-      pinMode(midLineFollower,INPUT);
+    };*/
+    Robot(uint8_t _speed = 50): speed(_speed)/*, sonar(trigPin, echoPin, 200), obstacle(false)*/ {
+      /*pinMode(midLineFollower,INPUT);
       pinMode(rightLineFollower,INPUT);
-      pinMode(leftLineFollower,INPUT);
-      //servo.attach(servoPin);
+      pinMode(leftLineFollower,INPUT);*/
     };
+    void init();
     void setSpeed(uint8_t);
     void brake(bool stop);
     void goForward();
@@ -48,7 +47,7 @@ public:
 
     void followLine();
 
-    void setServo();
+    //void setServo();
 
 private:
     int speed;
