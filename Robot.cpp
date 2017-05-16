@@ -3,7 +3,12 @@
 /******************* SETUP *******************/
 
 void Robot::init(){
-    //init motori
+    pinMode(directionRPin, OUTPUT);
+    pinMode(pwmRPin, OUTPUT);
+    pinMode(brakeRPin, OUTPUT);
+    pinMode(directionLPin, OUTPUT);
+    pinMode(pwmLPin, OUTPUT);
+    pinMode(brakeLPin, OUTPUT);
     pinMode(midLineFollower,INPUT);
     pinMode(rightLineFollower,INPUT);
     pinMode(leftLineFollower,INPUT);
@@ -41,7 +46,6 @@ void Robot::goForward() {
   digitalWrite(directionLPin, HIGH);*/
   Serial.begin(9600);
   Serial.println("I'm going forward!");
-  Serial.println(servo.read());
   Serial.end();
 }
 
@@ -58,7 +62,6 @@ void Robot::turnRight() {
   //delay(DELAY); /* Tempo provvisorio */
   Serial.begin(9600);
   Serial.println("I'm going right!");
-  Serial.println(servo.read());
   Serial.end();
 }
 
@@ -68,7 +71,6 @@ void Robot::turnLeft() {
   digitalWrite(brakeRPin, LOW);
   Serial.begin(9600);
   Serial.println("I'm going left!");
-  Serial.println(servo.read());
   Serial.end();
   //delay(DELAY); /* Tempo provvisorio */
 }
