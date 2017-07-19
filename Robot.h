@@ -47,7 +47,7 @@ public:
 
     void followLine();
 
-    //void setServo();
+    void setServo(bool);
 
 private:
     int speed;
@@ -55,7 +55,6 @@ private:
     static const uint8_t halfSpeed = 127;
     uint8_t controlSpeed(uint8_t);
     void rotateOn(uint8_t, uint16_t);
-
     /*  Motor settings */
     static const uint8_t directionRPin = 12; /* Pin to control the direction of right motor, linked to Ch.A */
     static const uint8_t pwmRPin = 3; /* Pin to control pwm of the right motor */

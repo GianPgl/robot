@@ -12,9 +12,10 @@ void Robot::init(){
     pinMode(midLineFollower,INPUT);
     pinMode(rightLineFollower,INPUT);
     pinMode(leftLineFollower,INPUT);
-    servo.attach(servoPin);
-    servo.write(90);
+    analogWrite(pwmLPin, speed);
+    analogWrite(pwmRPin, speed);
     sonar.init(trigPin, echoPin);
+    brake(true);
 }
 
 /******************* MOVEMENT *******************/
@@ -41,12 +42,12 @@ void Robot::brake(bool stop) { //true to stop, false to let the robot move
 }
 
 void Robot::goForward() {
-  /*brake(false);
+  brake(false);
   digitalWrite(directionRPin, HIGH);
-  digitalWrite(directionLPin, HIGH);*/
-  Serial.begin(9600);
+  digitalWrite(directionLPin, HIGH);
+  /*Serial.begin(9600);
   Serial.println("I'm going forward!");
-  Serial.end();
+  Serial.end();*/
 }
 
 void Robot::goBackward() {
@@ -59,20 +60,18 @@ void Robot::turnRight() {
   brake(false);
   digitalWrite(directionRPin, HIGH);
   digitalWrite(brakeLPin, LOW);
-  //delay(DELAY); /* Tempo provvisorio */
-  Serial.begin(9600);
+  /*Serial.begin(9600);
   Serial.println("I'm going right!");
-  Serial.end();
+  Serial.end();*/
 }
 
 void Robot::turnLeft() {
   brake(false);
   digitalWrite(directionLPin, HIGH);
   digitalWrite(brakeRPin, LOW);
-  Serial.begin(9600);
+  /*Serial.begin(9600);
   Serial.println("I'm going left!");
-  Serial.end();
-  //delay(DELAY); /* Tempo provvisorio */
+  Serial.end();*/
 }
 
 void Robot::rotateOn(uint8_t direction, uint16_t ms) {
@@ -100,12 +99,22 @@ void Robot::fullRotation() {
 
 /******************* SERVO *******************/
 
-/*void Robot::setServo(){
-  servo.attach(servoPin);
-  servo.write(90);
-}*/
+void Robot::setServo(bool state){
+  if(state == true){
+    if(servo.attached())
+      return;
+    servo.attach(servoPin);
+    servo.write(90);
+  } else {
+    if(!servo.attached())
+      return;
+    servo.detach();
+  }
+}
 
 void Robot::servoRotation(uint8_t degrees) { /* set servo position */
+  if(!servo.attached())
+    this->setServo(true);
   servo.write(degrees);
   delay(100); /* wait 100 milliseconds to permit to the servo to reach the position */
 }
@@ -135,7 +144,8 @@ uint8_t Robot::findPath() {
 
   /* Imposto la posizione base del servo */
   uint8_t position = 45;
-
+  if(!servo.attached())
+    this->setServo(true);
   /* Misuro la distanza variando progressivamente la posizione del servo */
   do {
     servoRotation(position);
@@ -182,21 +192,23 @@ void Robot::setPath() {
   }
 }
 
-/*void Robot::changePath() {
-
-}*/
-
 void Robot::followLine(){
-  if(!digitalRead(midLineFollower)){  //if a black line is detected input is LOW
-    goForward();
-  }
+  //Serial.begin(9600);
+  //if(!digitalRead(midLineFollower)){  //if a black line is detected input is LOW
+  //  goForward();
+  //}
   if(!digitalRead(rightLineFollower)){  //if a black line is detected input is LOW
     turnRight();
+    //Serial.write("Destra");
+    return;
   }
   if(!digitalRead(leftLineFollower)){  //if a black line is detected input is LOW
     turnLeft();
+    //Serial.write("Sinistra");
+    return;
   }
-  if(digitalRead(midLineFollower) && digitalRead(rightLineFollower) /*&& digitalRead(leftLineFollower)*/){
+  if(/*digitalRead(midLineFollower) && */digitalRead(rightLineFollower) && digitalRead(leftLineFollower)){
     //espressione triste
   }
+  //Serial.end();
 }
