@@ -11,15 +11,14 @@
 #define FRONT 0
 #define RIGHT 1
 #define LEFT 2
-#define NO_WAY -1
-#define ROTATION_DIST 8
-//#define DELAY 1000
+#define NO_WAY 3
+#define ROTATION_DIST 15
 
 class Robot {
 public:
     //(90 / speed) * 1000 is the time to make a 90 degrees rotation
     //_speed/2 is due to brake time variation
-    Robot(uint8_t _speed = 100): speed(_speed), _delay(90000/_speed - _speed/2), safeDistance(_speed/10+_speed/20){}
+    Robot(uint8_t _speed = 100): speed(_speed), _delay(90000/_speed - _speed/2), safeDistance(15*_speed/100){}
     void init();
     void setSpeed(uint8_t);
     uint16_t getDelay() {return _delay;}
@@ -37,8 +36,10 @@ public:
 
     uint8_t readDistanceCM();
     uint8_t readDistanceIN();
+    uint8_t mediumDistanceCM(uint8_t);
+    uint8_t mediumDistanceIN(uint8_t);
     bool isClear();
-    bool stuck(){return !emptyDir && cmpPrevDir();}
+    //bool stuck(uint16_t delay_time){return delay_time<=10;}/*{return !emptyDir && cmpPrevDir();}*/
     void findSafeZone();
     void setPath();
 
@@ -46,23 +47,13 @@ public:
 
     void setServo(bool);
 
-    //compare current directions with previous ones
-    bool cmpPrevDir(){return currDir[0]==prevDir[0] && currDir[1]==prevDir[1];}
-
-    bool emptyDir = true;
-
     //void setScreen();
 
 private:
     uint8_t speed;
     uint16_t _delay;
     uint8_t safeDistance;
-    uint8_t prevDir[2]; //previous directions
-    uint8_t currDir[2]; //current directions
-    void updateDir(uint8_t);
-    void resetDir();
     static const uint8_t maxSpeed = 255;
-    static const uint8_t halfSpeed = 127;
     uint8_t controlSpeed(uint8_t);
     void rotateOn(uint8_t, uint16_t);
     /*  Motor settings */
@@ -94,9 +85,6 @@ private:
     static const uint8_t resetPin = 1;
 
     //Adafruit_PCD8544 lcd;/*Adafruit_PCD8544 object to manage lcd screen*/
-
-    //static const uint8_t dangerDistance = 10;
-    bool obstacleDetected;
 };
 
 

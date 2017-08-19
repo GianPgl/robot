@@ -132,6 +132,22 @@ uint8_t Robot::readDistanceIN() {
   return distance;
 }
 
+uint8_t Robot::mediumDistanceCM(uint8_t it){
+  uint16_t total = 0;
+  for(uint8_t i=0; i<it; i++){
+    total += readDistanceCM();
+  }
+  return total/it;
+}
+
+uint8_t Robot::mediumDistanceIN(uint8_t it){
+  uint16_t total = 0;
+  for(uint8_t i=0; i<it; i++){
+    total += readDistanceIN();
+  }
+  return total/it;
+}
+
 bool Robot::isClear() { /* checks path clearness */
   uint8_t distance = readDistanceCM();
     if(distance >= safeDistance)
@@ -140,20 +156,6 @@ bool Robot::isClear() { /* checks path clearness */
 }
 
 /******************* OBLASTACLE AVOIDANCE *******************/
-
-void Robot::updateDir(uint8_t newDir){
-    prevDir[0] = prevDir[1];
-    prevDir[1] = currDir[0];
-    currDir[0] = currDir[1];
-    currDir[1] = newDir;
-    if(prevDir[0] != -1)
-      emptyDir = false;
-}
-
-inline void Robot::resetDir(){
-  prevDir[0]=prevDir[1]=currDir[0]=currDir[1]=-1;
-  emptyDir = true;
-}
 
 uint8_t Robot::findPath() {
   uint8_t leftDistance = 0;
@@ -168,9 +170,9 @@ uint8_t Robot::findPath() {
   do {
     servoRotation(position);
     switch (position) {
-      case 45-20: leftDistance = readDistanceCM(); break;
-      case 90-20: frontDistance = readDistanceCM(); break;
-      case 135-20: rightDistance = readDistanceCM(); break;
+      case 45-20: leftDistance = mediumDistanceCM(10); break;
+      case 90-20: frontDistance = mediumDistanceCM(10); break;
+      case 135-20: rightDistance = mediumDistanceCM(10); break;
     }
     position += 45;
     delay(400);
@@ -192,22 +194,21 @@ void Robot::findSafeZone(){
   uint8_t right, left;  //get rotation direction or go back if there's no way to ratate
   servoRotation(0);
   delay(400);
-  right = readDistanceCM();
+  right = mediumDistanceCM(10);
   servoRotation(180-20);
   delay(400);
-  left = readDistanceCM();
+  left = mediumDistanceCM(10);
   if(right < ROTATION_DIST && left < ROTATION_DIST){
     servoRotation(90-20);
     goBackward();
-    while(readDistanceCM() < safeDistance -1)
-      delay(10); //last position from which it can't go forward and get stuck again
+    while(readDistanceCM() < safeDistance -1)  //last position from which it can't go forward and get stuck again
+      delay(50);
     brake(true);
   }
   else{
     servoRotation(90-20);
-    halfRotation(right >= left ? RIGHT : LEFT); //both-NO_ECHO case means RIGHT
+    rotate(right >= left ? RIGHT : LEFT, 90);
   }
-  resetDir();
 }
 
 void Robot::setPath() {
@@ -216,22 +217,32 @@ void Robot::setPath() {
     findSafeZone();
     direction = findPath();
   }
-  if(direction != FRONT){
-    updateDir(direction);
-    if(stuck()){
-      findSafeZone();
-      direction = findPath();
-    }
-    rotate(direction == RIGHT ? RIGHT : LEFT ,45);
-  }
   servoRotation(90-20);
   delay(400);
-  if(isClear()){
-    goForward();
-    while(isClear())
-      delay(10);
+  if(direction != FRONT){
+    if(direction == RIGHT)
+      turnRight();
+    else
+      turnLeft();
+    while(!isClear())
+      delay(50);
     brake(true);
-    resetDir();
+    if(isClear()){             //  1)
+      goForward();
+      while(isClear())
+        delay(50);
+      brake(true);
+    }
+  }
+  else{
+    if(isClear()){            //  2)
+      goForward();
+      while(isClear())
+        delay(50);
+      brake(true);
+    }                         //  1) e 2) sono uguali ma se non li scrivessi due volte non potrei usare l'else
+    else
+      findSafeZone();
   }
 }
 
