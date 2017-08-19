@@ -18,7 +18,9 @@ class Robot {
 public:
     //(90 / speed) * 1000 is the time to make a 90 degrees rotation
     //_speed/2 is due to brake time variation
-    Robot(uint8_t _speed = 100): speed(_speed), _delay(90000/_speed - _speed/2), safeDistance(15*_speed/100){}
+    Robot(uint8_t _speed = 100): _delay(90000/_speed - _speed/2), safeDistance(15*_speed/100){
+      setSpeed(_speed);
+    }
     void init();
     void setSpeed(uint8_t);
     uint16_t getDelay() {return _delay;}
