@@ -20,14 +20,14 @@ void Robot::init(){
 }
 
 /******************* MOVEMENT *******************/
-uint8_t Robot::controlSpeed(uint8_t speed) {
-  if(speed > maxSpeed)
+uint8_t Robot::controlSpeed(uint8_t _speed) {
+  if(_speed > maxSpeed)
     return maxSpeed;
-  return speed;
+  return _speed;
 }
 
-void Robot::setSpeed(uint8_t speed) {
-  speed = controlSpeed(speed);
+void Robot::setSpeed(uint8_t _speed) {
+  speed = controlSpeed(_speed);
   analogWrite(pwmRPin, speed);
   analogWrite(pwmLPin, speed);
 }
