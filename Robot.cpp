@@ -12,22 +12,25 @@ void Robot::init(){
     pinMode(midLineFollower,INPUT);
     pinMode(rightLineFollower,INPUT);
     pinMode(leftLineFollower,INPUT);
+    pinMode(leftLightSensor, INPUT);
+    brake(true);
     analogWrite(pwmLPin, speed);
     analogWrite(pwmRPin, speed);
     sonar.init(trigPin, echoPin);
+    setServo(true);
+    setServo(false);
     //lcd.init(clkPin, dinPin, dcPin, resetPin);
-    brake(true);
 }
 
 /******************* MOVEMENT *******************/
-uint8_t Robot::controlSpeed(uint8_t _speed) {
-  if(_speed > maxSpeed)
+uint8_t Robot::controlSpeed(const uint16_t *_speed) {
+  if(*_speed > maxSpeed)
     return maxSpeed;
-  return _speed;
+  return *_speed;
 }
 
-void Robot::setSpeed(uint8_t _speed) {
-  speed = controlSpeed(_speed);
+void Robot::setSpeed(uint16_t _speed) {
+  speed = controlSpeed(&_speed);
   analogWrite(pwmRPin, speed);
   analogWrite(pwmLPin, speed);
 }
@@ -95,8 +98,8 @@ void Robot::halfRotation(uint8_t direction) {
   rotateOn(direction, 180);
 }
 
-void Robot::fullRotation() {
-  rotateOn(RIGHT, 360);
+void Robot::fullRotation(uint8_t direction) {
+  rotateOn(direction, 360);
 }
 
 /******************* SERVO *******************/
@@ -106,7 +109,7 @@ void Robot::setServo(bool state){
     if(servo.attached())
       return;
     servo.attach(servoPin);
-    servo.write(90-20);
+    servoRotation(90-20);
   } else {
     if(!servo.attached())
       return;
@@ -118,7 +121,7 @@ void Robot::servoRotation(uint8_t degrees) { /* set servo position */
   if(!servo.attached())
     setServo(true);
   servo.write(degrees);
-  delay(100); /* wait 100 milliseconds to permit to the servo to reach the position */
+  delay(400); /* wait 100 milliseconds to permit to the servo to reach the position */
 }
 
 /******************* ULTRASONIC *******************/
@@ -148,9 +151,10 @@ uint8_t Robot::mediumDistanceIN(uint8_t it){
   return total/it;
 }
 
-bool Robot::isClear() { /* checks path clearness */
+bool Robot::isClear(bool line = false) { /* checks path clearness */
+  uint8_t _safeDistance = line == true ? 10 : safeDistance;
   uint8_t distance = readDistanceCM();
-    if(distance >= safeDistance)
+    if(distance >= _safeDistance)
         return true;
     return false;
 }
@@ -164,8 +168,7 @@ uint8_t Robot::findPath() {
 
   /* Imposto la posizione base del servo */
   uint8_t position = 45-20;
-  if(!servo.attached())
-    setServo(true);
+  setServo(true);
   /* Misuro la distanza variando progressivamente la posizione del servo */
   do {
     servoRotation(position);
@@ -175,7 +178,6 @@ uint8_t Robot::findPath() {
       case 135-20: rightDistance = mediumDistanceCM(10); break;
     }
     position += 45;
-    delay(400);
   } while (position <= 135-20);
   if (rightDistance > frontDistance) {
     if (rightDistance > leftDistance)
@@ -193,10 +195,8 @@ uint8_t Robot::findPath() {
 void Robot::findSafeZone(){
   uint8_t right, left;  //get rotation direction or go back if there's no way to ratate
   servoRotation(0);
-  delay(400);
   right = mediumDistanceCM(10);
   servoRotation(180-20);
-  delay(400);
   left = mediumDistanceCM(10);
   if(right < ROTATION_DIST && left < ROTATION_DIST){
     servoRotation(90-20);
@@ -218,7 +218,6 @@ void Robot::setPath() {
     direction = findPath();
   }
   servoRotation(90-20);
-  delay(400);
   if(direction != FRONT){
     if(direction == RIGHT)
       turnRight();
@@ -247,24 +246,146 @@ void Robot::setPath() {
 }
 
 void Robot::followLine(){
-  //Serial.begin(9600);
-  //if(!digitalRead(midLineFollower)){  //if a black line is detected input is LOW
-  //  goForward();
-  //}
-  if(!digitalRead(rightLineFollower)){  //if a black line is detected input is LOW
-    turnRight();
-    //Serial.write("Destra");
-    return;
+  uint8_t dir = getLineDir();
+  uint8_t prevDir = dir;
+  while(true){
+    switch(dir){
+      case FRONT:
+        goForward();
+        while((dir = getLineDir())==FRONT);
+        brake(true);
+        break;
+      case RIGHT:
+        turnRight();
+        prevDir = dir;
+        while((dir = getLineDir())!=FRONT);
+        brake(true);
+        break;
+      case LEFT:
+        turnLeft();
+        prevDir = dir;
+        while((dir = getLineDir())!=FRONT);
+        brake(true);
+        break;
+      case NO_WAY:
+        if(prevDir != NO_WAY)
+          prevDir == RIGHT ? turnRight() : turnLeft();
+        while((dir = getLineDir()) == NO_WAY);
+        brake(true);
+        break;
+    }
   }
-  if(!digitalRead(leftLineFollower)){  //if a black line is detected input is LOW
-    turnLeft();
-    //Serial.write("Sinistra");
-    return;
+}
+
+void Robot::followAvoidServo(){
+  uint8_t dir = getLineDir();
+  uint8_t prevDir = dir;
+  setServo(true);
+  while(true){
+    if(isClear(true)){
+      switch(dir){
+        case FRONT:
+          servoRotation(90-20);
+          goForward();
+          while(isClear(true) && (dir = getLineDir())==FRONT);
+          brake(true);
+          break;
+        case RIGHT:
+          servoRotation(135-20);
+          turnRight();
+          prevDir = dir;
+          while(isClear(true) && (dir = getLineDir())!=FRONT);
+          brake(true);
+          break;
+        case LEFT:
+          servoRotation(45-20);
+          turnLeft();
+          prevDir = dir;
+          while(isClear(true) && (dir = getLineDir())!=FRONT);
+          brake(true);
+          break;
+        case NO_WAY:
+          if(prevDir != NO_WAY){
+            prevDir == RIGHT ? servoRotation(135-20) : servoRotation(90-20);
+            prevDir == RIGHT ? turnRight() : turnLeft();
+          }
+          while(isClear(true) && (dir = getLineDir()) == NO_WAY);
+          brake(true);
+          break;
+      }
+    }
   }
-  if(/*digitalRead(midLineFollower) && */digitalRead(rightLineFollower) && digitalRead(leftLineFollower)){
-    //espressione triste
+}
+
+void Robot::followAvoid(){
+  uint8_t dir = getLineDir();
+  uint8_t prevDir = dir;
+  setServo(true);
+  while(true){
+    if(isClear(true)){
+      switch(dir){
+        case FRONT:
+          goForward();
+          while(isClear(true) && (dir = getLineDir())==FRONT);
+          brake(true);
+          break;
+        case RIGHT:
+          turnRight();
+          prevDir = dir;
+          while(isClear(true) && (dir = getLineDir())!=FRONT);
+          brake(true);
+          break;
+        case LEFT:
+          turnLeft();
+          prevDir = dir;
+          while(isClear(true) && (dir = getLineDir())!=FRONT);
+          brake(true);
+          break;
+        case NO_WAY:
+          if(prevDir != NO_WAY)
+            prevDir == RIGHT ? turnRight() : turnLeft();
+          while(isClear(true) && (dir = getLineDir()) == NO_WAY);
+          brake(true);
+          break;
+      }
+    }
   }
-  //Serial.end();
+}
+
+/******************LIGHT SENSORS*******************/
+uint8_t Robot::getLightDir(uint8_t envLight){
+  //uint8_t right = lightIntensity();
+  uint8_t left = lightIntensity();
+        Serial.print("left: ");
+        Serial.print(left);
+        Serial.print("\n");
+  //leggi sensore dx
+  //confronto con valore dx e scelta del valore
+  if(left < envLight - 20)
+    return LEFT;
+  return NO_WAY;
+}
+
+void Robot::followLight(){
+  uint8_t envLight = lightIntensity();
+        Serial.print("env: ");
+        Serial.print(envLight);
+        Serial.print("\n");
+  uint8_t dir = getLightDir(envLight);
+  while(true){
+    switch(dir){
+      case NO_WAY:
+      while((dir = getLightDir(envLight))==NO_WAY)
+        delay(10);
+        break;
+      case LEFT:
+        turnLeft();
+        while((dir = getLightDir(envLight))==LEFT)
+        delay(10);
+        brake(true);
+        break;
+    }
+  }
 }
 
 /**************************LCD*********************/
