@@ -13,6 +13,7 @@ void Robot::init(){
     pinMode(rightLineFollower,INPUT);
     pinMode(leftLineFollower,INPUT);
     pinMode(leftLightSensor, INPUT);
+    pinMode(rightLightSensor, INPUT);
     brake(true);
     analogWrite(pwmLPin, speed);
     analogWrite(pwmRPin, speed);
@@ -70,13 +71,10 @@ void Robot::turnRight() {
 }
 
 void Robot::rotateOn(uint8_t direction, uint16_t deg) {
-  brake(false);
-  if (direction == LEFT) {
-    digitalWrite(directionRPin, LOW);
-    digitalWrite(directionLPin, HIGH);
+  if (direction == RIGHT) {
+    turnRight();
   } else {
-    digitalWrite(directionRPin, HIGH);
-    digitalWrite(directionLPin, LOW);
+    turnLeft();
   }
   delay(map(deg, 0, 360, 0, 4*getDelay()));
   brake(true);
@@ -354,19 +352,24 @@ void Robot::followAvoid(){
 
 /******************LIGHT SENSORS*******************/
 uint8_t Robot::getLightDir(uint8_t envLight){
-  //uint8_t right = lightIntensity();
-  uint8_t left = lightIntensity();
-        Serial.print("left: ");
-        Serial.print(left);
-        Serial.print("\n");
-  //leggi sensore dx
-  //confronto con valore dx e scelta del valore
-  if(left < envLight - 20)
-    return LEFT;
-  return NO_WAY;
+  uint8_t right = lightIntensity(RIGHT);
+  uint8_t left = lightIntensity(LEFT);
+  if(right < left){
+    if(right >= envLight-20)
+      return NO_WAY;
+  } else {
+    if(left >= envLight-20)
+      return NO_WAY;
+  }
+  if(abs(right-left) <= 10)
+    return FRONT;
+  if(right < left)
+    return RIGHT;
+  return LEFT;
 }
 
 void Robot::followLight(){
+  delay(3000);
   uint8_t envLight = lightIntensity();
         Serial.print("env: ");
         Serial.print(envLight);
@@ -381,6 +384,18 @@ void Robot::followLight(){
       case LEFT:
         turnLeft();
         while((dir = getLightDir(envLight))==LEFT)
+        delay(10);
+        brake(true);
+        break;
+      case RIGHT:
+        turnRight();
+        while((dir = getLightDir(envLight))==RIGHT)
+        delay(10);
+        brake(true);
+        break;
+      case FRONT:
+        goForward();
+        while((dir = getLightDir(envLight))==FRONT)
         delay(10);
         brake(true);
         break;

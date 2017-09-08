@@ -17,10 +17,9 @@
 class Robot {
 public:
     //(90 / speed) * 1000 is the time to make a 90 degrees rotation
-    //_speed/2 is due to brake time variation
     Robot(uint16_t _speed = 255){
       setSpeed(_speed);
-      _delay = 90000/speed - speed/2;
+      _delay = 90000/speed + speed/6;
       safeDistance = 15*speed/100;
     }
     void init();
@@ -50,7 +49,7 @@ public:
     void followAvoid();
     void followAvoidServo();
     void setServo(bool);
-    uint8_t lightIntensity(){return analogRead(leftLightSensor);}
+    uint8_t lightIntensity(uint8_t dir=RIGHT){return dir == RIGHT? analogRead(rightLightSensor) : analogRead(leftLightSensor);}
     uint8_t getLightDir(uint8_t);
     void followLight();
 
@@ -66,10 +65,13 @@ private:
     void rotateOn(uint8_t, uint16_t);
     uint8_t findPath();
     /*  Motor settings */
+
+    //motor A
     static const uint8_t directionRPin = 12; /* Pin to control the direction of right motor, linked to Ch.A */
     static const uint8_t pwmRPin = 3; /* Pin to control pwm of the right motor */
     static const uint8_t brakeRPin = 9; /* Pin to brake right motor */
 
+    //motor B
     static const uint8_t directionLPin = 13; /* Pin to control the direction of left motor, linked to Ch.B */
     static const uint8_t pwmLPin = 11; /* Pin to control pwm of the left motor */
     static const uint8_t brakeLPin = 8; /* Pin to brake left motor */
@@ -83,8 +85,8 @@ private:
     Servo servo;
 
     /*  Ultrasonic sensor settings  */
-    static const uint8_t trigPin = A1; /* It can be changed */
-    static const uint8_t echoPin = A2; /* It can be changed */
+    static const uint8_t trigPin = A2; /* It can be changed */
+    static const uint8_t echoPin = A3; /* It can be changed */
     NewPing sonar;
 
     /* LCD pins  */
@@ -94,7 +96,7 @@ private:
     static const uint8_t resetPin = 1;
 
     /*  Light sensors */
-    static const uint8_t leftLightSensor = A0;
+    static const uint8_t leftLightSensor = A5;
     static const uint8_t rightLightSensor = A4;
 
     //Adafruit_PCD8544 lcd;/*Adafruit_PCD8544 object to manage lcd screen*/
