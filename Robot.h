@@ -13,6 +13,9 @@
 #define LEFT 2
 #define NO_WAY 3
 #define ROTATION_DIST 15
+#define ENV_TOLERANCE 20
+
+using u_char = unsigned char;
 
 class Robot {
 public:
@@ -30,10 +33,10 @@ public:
     void goBackward();
     void turnRight();
     void turnLeft();
-    void rotate(uint8_t direction, uint16_t deg);
-    void rightAngleRotation(uint8_t);
-    void fullRotation(uint8_t);
-    void halfRotation(uint8_t);
+    void rotate(u_char, uint16_t);
+    void rightAngleRotation(u_char);
+    void fullRotation(u_char);
+    void halfRotation(u_char);
     void servoRotation(uint8_t);
     uint8_t readDistanceCM();
     uint8_t readDistanceIN();
@@ -43,15 +46,17 @@ public:
     void findSafeZone();
     void setPath();
     void followLine();
-    uint8_t getLineDir(){return !digitalRead(rightLineFollower) ? RIGHT
-      : !digitalRead(leftLineFollower) ? LEFT
-      : !digitalRead(midLineFollower) ? FRONT : NO_WAY;}
+    uint8_t getLineDir();
     void followAvoid();
     void followAvoidServo();
     void setServo(bool);
-    uint8_t lightIntensity(uint8_t dir=RIGHT){return dir == RIGHT? analogRead(rightLightSensor) : analogRead(leftLightSensor);}
-    uint8_t getLightDir(uint8_t);
+    uint8_t lightIntensity(u_char);
+    uint8_t getLightDir();
     void followLight();
+    bool lightCalibrationRequired() {return lightCalibration;}
+    void requireLightCalibration() {lightCalibration = true;}
+    void setEnvLight();
+    uint8_t getEnvLight() {return envLight;}
 
     //void setScreen();
 
@@ -60,9 +65,11 @@ private:
     uint16_t _delay;
     uint8_t safeDistance;
     static const uint8_t maxSpeed = 255;
+    uint8_t envLight = 0;
+    bool lightCalibration = false;
 
     uint8_t controlSpeed(const uint16_t*);
-    void rotateOn(uint8_t, uint16_t);
+    void rotateOn(u_char, uint16_t);
     uint8_t findPath();
     /*  Motor settings */
 

@@ -70,7 +70,7 @@ void Robot::turnRight() {
   digitalWrite(directionRPin, LOW);
 }
 
-void Robot::rotateOn(uint8_t direction, uint16_t deg) {
+void Robot::rotateOn(u_char direction, uint16_t deg) {
   if (direction == RIGHT) {
     turnRight();
   } else {
@@ -80,11 +80,11 @@ void Robot::rotateOn(uint8_t direction, uint16_t deg) {
   brake(true);
 }
 
-void Robot::rightAngleRotation(uint8_t direction) {
+void Robot::rightAngleRotation(u_char direction) {
   rotateOn(direction, 90);
 }
 
-void Robot::rotate(uint8_t direction, uint16_t deg){
+void Robot::rotate(u_char direction, uint16_t deg){
   uint16_t _deg = deg > 360 ? 360 : deg;  //needs more than a full rotation if deg > 360, so it does a stepper one
   rotateOn(direction, _deg);
   if(deg > 360){
@@ -92,11 +92,11 @@ void Robot::rotate(uint8_t direction, uint16_t deg){
   }
 }
 
-void Robot::halfRotation(uint8_t direction) {
+void Robot::halfRotation(u_char direction) {
   rotateOn(direction, 180);
 }
 
-void Robot::fullRotation(uint8_t direction) {
+void Robot::fullRotation(u_char direction) {
   rotateOn(direction, 360);
 }
 
@@ -159,6 +159,13 @@ bool Robot::isClear(bool line = false) { /* checks path clearness */
 
 /******************* OBLASTACLE AVOIDANCE *******************/
 
+
+uint8_t Robot::getLineDir(){
+  return !digitalRead(rightLineFollower) ? RIGHT
+  : !digitalRead(leftLineFollower) ? LEFT
+  : !digitalRead(midLineFollower) ? FRONT : NO_WAY;
+}
+
 uint8_t Robot::findPath() {
   uint8_t leftDistance = 0;
   uint8_t frontDistance = 0;
@@ -210,7 +217,7 @@ void Robot::findSafeZone(){
 }
 
 void Robot::setPath() {
-  uint8_t direction = findPath();
+  u_char direction = findPath();
   while(direction == NO_WAY){
     findSafeZone();
     direction = findPath();
@@ -244,8 +251,8 @@ void Robot::setPath() {
 }
 
 void Robot::followLine(){
-  uint8_t dir = getLineDir();
-  uint8_t prevDir = dir;
+  u_char dir = getLineDir();
+  u_char prevDir = dir;
   while(true){
     switch(dir){
       case FRONT:
@@ -276,8 +283,8 @@ void Robot::followLine(){
 }
 
 void Robot::followAvoidServo(){
-  uint8_t dir = getLineDir();
-  uint8_t prevDir = dir;
+  u_char dir = getLineDir();
+  u_char prevDir = dir;
   setServo(true);
   while(true){
     if(isClear(true)){
@@ -316,8 +323,8 @@ void Robot::followAvoidServo(){
 }
 
 void Robot::followAvoid(){
-  uint8_t dir = getLineDir();
-  uint8_t prevDir = dir;
+  u_char dir = getLineDir();
+  u_char prevDir = dir;
   setServo(true);
   while(true){
     if(isClear(true)){
@@ -351,14 +358,32 @@ void Robot::followAvoid(){
 }
 
 /******************LIGHT SENSORS*******************/
-uint8_t Robot::getLightDir(uint8_t envLight){
+
+uint8_t Robot::lightIntensity(u_char dir = RIGHT){
+  if(dir != RIGHT && dir!= LEFT)
+    dir = RIGHT;
+  return dir == RIGHT? analogRead(rightLightSensor) : analogRead(leftLightSensor);
+}
+
+void Robot::setEnvLight(){
+  lightCalibration = false;
+  uint16_t temp = (lightIntensity(RIGHT) + lightIntensity(LEFT)) / 2;
+  envLight = temp > 255 ? 255 : temp;
+}
+
+uint8_t Robot::getLightDir(){
   uint8_t right = lightIntensity(RIGHT);
   uint8_t left = lightIntensity(LEFT);
+  uint8_t envLight = getEnvLight();
+  Serial.print("left: ");
+  Serial.print(left);
+  Serial.print("\tright: ");
+  Serial.println(right);
   if(right < left){
-    if(right >= envLight-20)
+    if(right >= envLight-ENV_TOLERANCE)
       return NO_WAY;
   } else {
-    if(left >= envLight-20)
+    if(left >= envLight-ENV_TOLERANCE)
       return NO_WAY;
   }
   if(abs(right-left) <= 10)
@@ -369,38 +394,38 @@ uint8_t Robot::getLightDir(uint8_t envLight){
 }
 
 void Robot::followLight(){
-  delay(3000);
-  uint8_t envLight = lightIntensity();
-        Serial.print("env: ");
-        Serial.print(envLight);
-        Serial.print("\n");
-  uint8_t dir = getLightDir(envLight);
-  while(true){
+  if(envLight == 0 || lightCalibrationRequired())
+    setEnvLight();
+  Serial.print("env: ");
+  Serial.print(getEnvLight());
+  Serial.print("\n");
+  u_char dir = getLightDir();
+  //while(true){
     switch(dir){
       case NO_WAY:
-      while((dir = getLightDir(envLight))==NO_WAY)
-        delay(10);
+      //while((dir = getLightDir(envLight))==NO_WAY)
+      //  delay(10);
         break;
       case LEFT:
         turnLeft();
-        while((dir = getLightDir(envLight))==LEFT)
-        delay(10);
+        while((dir = getLightDir())==LEFT)
+          delay(10);
         brake(true);
         break;
       case RIGHT:
         turnRight();
-        while((dir = getLightDir(envLight))==RIGHT)
-        delay(10);
+        while((dir = getLightDir())==RIGHT)
+          delay(10);
         brake(true);
         break;
       case FRONT:
         goForward();
-        while((dir = getLightDir(envLight))==FRONT)
-        delay(10);
+        while((dir = getLightDir())==FRONT)
+          delay(10);
         brake(true);
         break;
     }
-  }
+  //}
 }
 
 /**************************LCD*********************/
