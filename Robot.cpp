@@ -170,6 +170,7 @@ uint8_t Robot::findPath() {
   uint8_t leftDistance = 0;
   uint8_t frontDistance = 0;
   uint8_t rightDistance = 0;
+  uint8_t min;
 
   /* Imposto la posizione base del servo */
   uint8_t position = 45-20;
@@ -184,7 +185,17 @@ uint8_t Robot::findPath() {
     }
     position += 45;
   } while (position <= 135-20);
-  if (rightDistance > frontDistance) {
+  min = min(frontDistance, min(rightDistance, leftDistance));
+  if(min < safeDistance)
+    return NO_WAY;
+  if(min == frontDistance)
+    return FRONT;
+  else{
+    if(min == rightDistance)
+      return RIGHT;
+    return LEFT;
+  }
+  /*if (rightDistance > frontDistance) {
     if (rightDistance > leftDistance)
       return rightDistance < safeDistance ? NO_WAY : RIGHT;
     else
@@ -194,7 +205,7 @@ uint8_t Robot::findPath() {
       return leftDistance < safeDistance ? NO_WAY : LEFT;
     else
       return frontDistance < safeDistance ? NO_WAY : FRONT;
-  }
+  }*/
 }
 
 void Robot::findSafeZone(){
@@ -359,27 +370,32 @@ void Robot::followAvoid(){
 
 /******************LIGHT SENSORS*******************/
 
-uint8_t Robot::lightIntensity(u_char dir = RIGHT){
-  if(dir != RIGHT && dir!= LEFT)
-    dir = RIGHT;
-  return dir == RIGHT? analogRead(rightLightSensor) : analogRead(leftLightSensor);
+uint8_t Robot::lightIntensity(u_char dir = FRONT){
+  if(dir != RIGHT && dir!= LEFT && dir != FRONT)
+    return analogRead(midLightSensor);
+  return dir == FRONT? analogRead(midLightSensor) :
+    dir == RIGHT ? analogRead(rightLightSensor) : analogRead(leftLightSensor);
 }
 
 void Robot::setEnvLight(){
   lightCalibration = false;
-  uint16_t temp = (lightIntensity(RIGHT) + lightIntensity(LEFT)) / 2;
-  envLight = temp > 255 ? 255 : temp;
+  uint16_t temp = lightIntensity();
+  envLight = (temp > 255 ? 255 : temp);
 }
 
 uint8_t Robot::getLightDir(){
   uint8_t right = lightIntensity(RIGHT);
   uint8_t left = lightIntensity(LEFT);
+  uint8_t front = lightIntensity(FRONT);
+  uint8_t min;
   uint8_t envLight = getEnvLight();
-  Serial.print("left: ");
+  Serial.print("front: ");
+  Serial.print(front);
+  Serial.print("\tleft: ");
   Serial.print(left);
   Serial.print("\tright: ");
   Serial.println(right);
-  if(right < left){
+  /*if(right < left){
     if(right >= envLight-ENV_TOLERANCE)
       return NO_WAY;
   } else {
@@ -390,7 +406,17 @@ uint8_t Robot::getLightDir(){
     return FRONT;
   if(right < left)
     return RIGHT;
-  return LEFT;
+  return LEFT;*/
+  min = min(front, min(left, right));
+  if(min >= envLight/*-ENV_TOLERANCE*/)
+    return NO_WAY;
+  if(min == front)
+    return FRONT;
+  else{
+    if(min == right)
+      return RIGHT;
+    return LEFT;
+    }
 }
 
 void Robot::followLight(){

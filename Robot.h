@@ -92,8 +92,8 @@ private:
     Servo servo;
 
     /*  Ultrasonic sensor settings  */
-    static const uint8_t trigPin = A2; /* It can be changed */
-    static const uint8_t echoPin = A3; /* It can be changed */
+    static const uint8_t trigPin = A1; /* It can be changed */
+    static const uint8_t echoPin = A2; /* It can be changed */
     NewPing sonar;
 
     /* LCD pins  */
@@ -105,6 +105,7 @@ private:
     /*  Light sensors */
     static const uint8_t leftLightSensor = A5;
     static const uint8_t rightLightSensor = A4;
+    static const uint8_t midLightSensor = A3;
 
     //Adafruit_PCD8544 lcd;/*Adafruit_PCD8544 object to manage lcd screen*/
 };
